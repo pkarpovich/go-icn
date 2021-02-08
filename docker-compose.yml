@@ -5,3 +5,21 @@ services:
     image: "redis:6.0"
     ports:
     - 6379:6379
+
+  provider-a:
+    build:
+      context: .
+      dockerfile: ./content-provider/Dockerfile
+    container_name: provider-a
+    volumes:
+      - ./certificates:/app/certificates
+      - ./content:/app/content
+    ports:
+    - 8080:8080
+    environment:
+      - HTTP_PORT=8080
+      - CONTENT_DIR_NAME=./content
+      - REDIS_ADDR=cache:6379
+      - CERTIFICATE_PATH=/app/certificates/localhost.pem
+      - CERTIFICATE_KEY_PATH=/app/certificates/localhost-key.pem
+      - MANAGER_URL=https://localhost:8081

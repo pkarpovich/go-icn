@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  cache:
+    image: "redis:6.0"
+    ports:
+      - 6379:6379
+
+  client:
+    container_name: client
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    volumes:
+      - ./client:/go/bin/go-icn/client
+    environment:
+      - MANAGER_URL=http://manager:8080
+      - DOWNLOAD_FOLDER_PATH=download
+
+  manager:
+    container_name: manager
+    build:
+      context: .
+      dockerfile: ./content-manager/Dockerfile.development
+    volumes:
+      - ./content-manager:/go/bin/go-icn/content-manager
+    ports:
+    - 8081:8080
+    environment:
+      - HTTP_PORT=8080
+      - REDIS_ADDR=cache:6379
+      - REDIS_DB=2
+
+  provider-a:
+    build:
+      context: .
+      dockerfile: ./content-provider/Dockerfile.development
+    container_name: provider-a
+    ports:
+      - 8080:8080
+    volumes:
+      - ./content-provider:/go/bin/go-icn/content-provider
+      - ./content:/go/bin/go-icn/content-provider/content
+    environment:
+      - HTTP_PORT=8080
+      - CONTENT_DIR_NAME=./content
+      - REDIS_ADDR=cache:6379
+      - REDIS_DB=1
+      - MANAGER_URL=http://manager:8080
